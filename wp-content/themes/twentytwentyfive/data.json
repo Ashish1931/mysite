@@ -1,0 +1,60 @@
+{
+    "createdAt": "2026-02-19T04:51:52.411Z",
+    "updatedAt": "2026-02-19T04:51:52.411Z",
+    "createdBy": 52826,
+    "updatedBy": 52826,
+    "recordActions": {
+        "read": true,
+        "update": true,
+        "delete": true,
+        "email": true,
+        "call": true,
+        "sms": true,
+        "task": true,
+        "note": true,
+        "meeting": true,
+        "document": true,
+        "deleteAll": true,
+        "quotation": false,
+        "reassign": true
+    },
+    "metaData": {
+        "idNameStore": {
+            "updatedBy": {
+                "52826": "Amura Marketing Technologies PVT LTD"
+            },
+            "createdBy": {
+                "52826": "Amura Marketing Technologies PVT LTD"
+            },
+            "ownerId": {
+                "52826": "Amura Marketing Technologies PVT LTD"
+            }
+        }
+    },
+    "id": 43421951,
+    "ownerId": 52826,
+    "firstName": "test",
+    "lastName": "test",
+    "phoneNumbers": [
+        {
+            "id": 45186925,
+            "type": "MOBILE",
+            "code": "IN",
+            "value": "8798765678",
+            "dialCode": "+91",
+            "primary": true
+        }
+    ],
+    "emails": [
+        {
+            "type": "OFFICE",
+            "value": "ashish.chavan1@amuratech.com",
+            "primary": true
+        }
+    ],
+    "createdViaId": "universal-app-key",
+    "createdViaName": "Universal API Key",
+    "createdViaType": "API Key",
+    "score": 0.0,
+    "aging": 0
+}

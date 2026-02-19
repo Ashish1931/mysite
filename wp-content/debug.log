@@ -1,0 +1,23 @@
+[18-Feb-2026 10:06:53 UTC] CF7 Hook Fired
+[18-Feb-2026 11:11:31 UTC] CF7 CRM Hook Triggered
+[18-Feb-2026 11:11:31 UTC] Body Sent: {"firstName":"","phoneNumbers":[{"type":"MOBILE","code":"IN","value":"","dialCode":"+91","primary":true}],"emails":[{"type":"OFFICE","value":"","primary":true}],"country":"IN","source":"Website"}
+[18-Feb-2026 11:11:31 UTC] Response Code: 400
+[18-Feb-2026 11:11:31 UTC] Response Body: {"code":"001079","message":"Invalid API key","fieldErrors":null}
+[18-Feb-2026 11:28:48 UTC] CF7 CRM Hook Triggered
+[18-Feb-2026 11:28:48 UTC] Body Sent: {"firstName":"","phoneNumbers":[{"type":"MOBILE","code":"IN","value":"","dialCode":"+91","primary":true}],"emails":[{"type":"OFFICE","value":"","primary":true}],"country":"IN","source":"Website"}
+[18-Feb-2026 11:28:48 UTC] Response Code: 400
+[18-Feb-2026 11:28:48 UTC] Response Body: {"code":"001079","message":"Invalid API key","fieldErrors":null}
+[18-Feb-2026 23:49:08 UTC] Automatic updates starting...
+[18-Feb-2026 23:49:10 UTC] Automatic updates complete.
+[18-Feb-2026 23:49:20 UTC] CF7 CRM Hook Triggered
+[18-Feb-2026 23:49:20 UTC] Body Sent: {"firstName":"","lastName":"","phoneNumbers":[],"emails":[],"country":"IN","city":"","state":"","companyName":"","designation":"","source":"Website","requirementName":"","requirementBudget":0}
+[18-Feb-2026 23:49:20 UTC] Response Code: 400
+[18-Feb-2026 23:49:20 UTC] Response Body: {"code":"000000","message":"2","fieldErrors":null}
+[19-Feb-2026 00:24:24 UTC] CF7 CRM Hook Triggered
+[19-Feb-2026 00:24:24 UTC] Kylas Body Sent: {"firstName":"Rohit","lastName":"Sharma","phoneNumbers":[{"type":"MOBILE","code":"IN","value":"9870604050","dialCode":"+91","primary":true}],"emails":[{"type":"OFFICE","value":"rssharma@gmail.com","primary":true}],"country":"IN","source":"Website"}
+[19-Feb-2026 00:24:24 UTC] Kylas Response Code: 400
+[19-Feb-2026 00:24:24 UTC] Kylas Response Body: {"code":"001079","message":"Invalid API key","fieldErrors":null}
+[19-Feb-2026 04:19:20 UTC] CRM Status: 400
+[19-Feb-2026 04:19:20 UTC] CRM Response: {"code":"000004","message":"Invalid JSON","errorDetails":[]}
+[19-Feb-2026 05:49:41 UTC] CRM Status: 400
+[19-Feb-2026 05:49:41 UTC] CRM Response: {"code":"000000","message":"2","fieldErrors":null}
