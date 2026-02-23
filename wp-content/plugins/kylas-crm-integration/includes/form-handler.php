@@ -162,10 +162,12 @@ class Kylas_CRM_Form_Handler {
      */
     private function save_lead_locally( $form_type, $form_id, $data, $first_name, $last_name, $email, $phone ) {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'cf7_leads';
+        $leads_table = $wpdb->prefix . 'kylas_crm_leads';
+        $data_table = $wpdb->prefix . 'kylas_crm_form_data';
 
+        // 1. Insert into leads table
         $wpdb->insert(
-            $table_name,
+            $leads_table,
             array(
                 'form_type'  => $form_type,
                 'form_id'    => $form_id,
@@ -173,13 +175,25 @@ class Kylas_CRM_Form_Handler {
                 'last_name'  => $last_name,
                 'email'      => $email,
                 'phone'      => $phone,
-                'form_data'  => wp_json_encode( $data ),
-                'status'     => 'pending',
-                'created_at' => current_time( 'mysql' )
             )
         );
 
-        return $wpdb->insert_id;
+        $lead_id = $wpdb->insert_id;
+
+        // 2. Insert into data table linked by lead_id
+        if ( $lead_id ) {
+            $wpdb->insert(
+                $data_table,
+                array(
+                    'lead_id'       => $lead_id,
+                    'form_data'     => wp_json_encode( $data ),
+                    'status'        => 'pending',
+                    'created_at'    => current_time( 'mysql' )
+                )
+            );
+        }
+
+        return $lead_id;
     }
 
     /**
@@ -187,7 +201,7 @@ class Kylas_CRM_Form_Handler {
      */
     private function update_lead_status( $lead_id, $response ) {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'cf7_leads';
+        $data_table = $wpdb->prefix . 'kylas_crm_form_data';
 
         $status = 'failed';
         $code   = 0;
@@ -204,13 +218,13 @@ class Kylas_CRM_Form_Handler {
         }
 
         $wpdb->update(
-            $table_name,
+            $data_table,
             array(
                 'status'        => $status,
                 'response_code' => $code,
                 'response_body' => $body
             ),
-            array( 'id' => $lead_id )
+            array( 'lead_id' => $lead_id )
         );
     }
 
