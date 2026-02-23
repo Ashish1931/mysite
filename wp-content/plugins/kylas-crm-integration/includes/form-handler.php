@@ -43,44 +43,67 @@ class Kylas_CRM_Form_Handler {
             return;
         }
 
-
-
-        // 1. Extract standard fields
-        $first_name = isset( $posted_data['first_name'] ) ? sanitize_text_field( $posted_data['first_name'] ) : '';
-        $last_name  = isset( $posted_data['last_name'] ) ? sanitize_text_field( $posted_data['last_name'] ) : '';
-        $email      = isset( $posted_data['email'] ) ? sanitize_email( $posted_data['email'] ) : '';
-        $phone      = isset( $posted_data['phone'] ) ? sanitize_text_field( $posted_data['phone'] ) : '';
-
-        // 2. Prepare CRM Payload
-        $kylas_payload = array(
-            'firstName' => $first_name,
-            'lastName'  => $last_name,
-        );
-
-        if ( ! empty( $email ) ) {
-            $kylas_payload['emails'] = array(
-                array(
-                    "type"    => "OFFICE",
-                    "value"   => $email,
-                    "primary" => true
-                )
-            );
+        // 1. Fetch Saved Mapping
+        global $wpdb;
+        $mappings_table = $wpdb->prefix . 'kylas_field_mappings';
+        $mapping_json = $wpdb->get_var($wpdb->prepare("SELECT mapping_json FROM $mappings_table WHERE form_id = %d", $form_id));
+        
+        if (!$mapping_json) {
+            error_log('Kylas CRM: No field mapping found for form ID ' . $form_id);
+            return;
         }
 
-        if ( ! empty( $phone ) ) {
-            $clean_phone = preg_replace( '/[^0-9]/', '', $phone );
-            if ( ! empty( $clean_phone ) ) {
-                $kylas_payload['phoneNumbers'] = array(
-                    array(
-                        "type"     => "MOBILE",
-                        "code"     => "IN",
-                        "value"    => $clean_phone,
-                        "dialCode" => "+91",
-                        "primary"  => true
-                    )
-                );
+        $mapping = json_decode($mapping_json, true);
+        if (empty($mapping)) {
+            return;
+        }
+
+        // 2. Prepare CRM Payload based on mapping
+        $kylas_payload = array();
+        foreach ($mapping as $cf7_field => $kylas_field) {
+            if (empty($kylas_field) || !isset($posted_data[$cf7_field])) {
+                continue;
+            }
+
+            $value = sanitize_text_field($posted_data[$cf7_field]);
+
+            switch ($kylas_field) {
+                case 'email':
+                    $kylas_payload['emails'] = array(
+                        array("type" => "OFFICE", "value" => $value, "primary" => true)
+                    );
+                    break;
+                case 'phone':
+                    $clean_phone = preg_replace('/[^0-9]/', '', $value);
+                    if (strlen($clean_phone) > 10) {
+                        $clean_phone = substr($clean_phone, -10);
+                    }
+                    $kylas_payload['phoneNumbers'] = array(
+                        array(
+                            "type"     => "MOBILE", 
+                            "code"     => "IN",
+                            "value"    => $clean_phone, 
+                            "dialCode" => "+91", 
+                            "primary"  => true
+                        )
+                    );
+                    break;
+                case 'requirement':
+                    $kylas_payload['notes'] = array(
+                        array("content" => $value)
+                    );
+                    break;
+                default:
+                    $kylas_payload[$kylas_field] = $value;
+                    break;
             }
         }
+
+        // Standard fallback for local storage display (can be optimized)
+        $first_name = isset($kylas_payload['firstName']) ? $kylas_payload['firstName'] : '';
+        $last_name = isset($kylas_payload['lastName']) ? $kylas_payload['lastName'] : '';
+        $email = isset($kylas_payload['emails'][0]['value']) ? $kylas_payload['emails'][0]['value'] : '';
+        $phone = isset($kylas_payload['phoneNumbers'][0]['value']) ? $kylas_payload['phoneNumbers'][0]['value'] : '';
 
         // 3. Save locally first
         $lead_id = $this->save_lead_locally( 'cf7', $form_id, $posted_data, $first_name, $last_name, $email, $phone );
@@ -91,6 +114,46 @@ class Kylas_CRM_Form_Handler {
         // 5. Update local lead with response
         if ( $lead_id ) {
             $this->update_lead_status( $lead_id, $response );
+
+            // 6. Send Notifications if successful
+            if ( ! is_wp_error( $response ) ) {
+                $code = wp_remote_retrieve_response_code( $response );
+                if ( $code >= 200 && $code < 300 ) {
+                    $this->send_notifications( $first_name, $last_name, $email );
+                }
+            }
+        }
+    }
+
+    /**
+     * Send Email Notifications
+     */
+    private function send_notifications( $first_name, $last_name, $lead_email ) {
+        $notify_admin = get_option( 'kylas_crm_notify_admin', 'no' );
+        $notify_lead  = get_option( 'kylas_crm_notify_lead', 'no' );
+        $full_name    = trim( $first_name . ' ' . $last_name );
+
+        // 1. Notify Admin
+        if ( 'yes' === $notify_admin ) {
+            $admin_email = get_option( 'admin_email' );
+            $subject     = 'New Lead Created in Kylas CRM';
+            $message     = "A new lead has been successfully registered in Kylas CRM.\n\n";
+            $message    .= "Name: $full_name\n";
+            $message    .= "Email: $lead_email\n";
+            $message    .= "Date: " . current_time( 'mysql' ) . "\n";
+            
+            wp_mail( $admin_email, $subject, $message );
+        }
+
+        // 2. Notify Lead
+        if ( 'yes' === $notify_lead && ! empty( $lead_email ) ) {
+            $subject = 'Registration Successful';
+            $message = "Hello $first_name,\n\n";
+            $message .= "Thank you for reaching out! We have successfully received your information and registered you in our CRM.\n\n";
+            $message .= "Our team will get back to you shortly.\n\n";
+            $message .= "Best regards,\n" . get_bloginfo( 'name' );
+
+            wp_mail( $lead_email, $subject, $message );
         }
     }
 
@@ -157,13 +220,14 @@ class Kylas_CRM_Form_Handler {
     private function send_to_kylas( $data ) {
 
         $api_key = get_option( 'kylas_crm_api_key' );
+        $base_url = get_option( 'kylas_crm_base_url', 'https://api.kylas.io/v1/' );
 
         if ( empty( $api_key ) ) {
             error_log( 'Kylas Integration Error: Missing API Key.' );
             return new WP_Error( 'missing_api_key', 'Missing API Key' );
         }
 
-        $endpoint = 'https://api.kylas.io/v1/leads';
+        $endpoint = rtrim($base_url, '/') . '/leads';
 
         $args = array(
             'body'        => wp_json_encode( $data ),

@@ -7,11 +7,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 function kylas_crm_create_tables() {
     global $wpdb;
 
-    $leads_table = $wpdb->prefix . 'cf7_leads';
-
     $charset_collate = $wpdb->get_charset_collate();
 
-    $sql = "CREATE TABLE $leads_table (
+    // 1. Table for local lead storage
+    $leads_table = $wpdb->prefix . 'cf7_leads';
+    $sql1 = "CREATE TABLE $leads_table (
         id bigint(20) NOT NULL AUTO_INCREMENT,
         form_type varchar(50) NOT NULL,
         form_id bigint(20) NOT NULL,
@@ -27,6 +27,19 @@ function kylas_crm_create_tables() {
         PRIMARY KEY (id)
     ) $charset_collate;";
 
+    // 2. Table for field mappings
+    $mappings_table = $wpdb->prefix . 'kylas_field_mappings';
+    $sql2 = "CREATE TABLE $mappings_table (
+        id bigint(20) NOT NULL AUTO_INCREMENT,
+        form_type varchar(50) NOT NULL,
+        form_id bigint(20) NOT NULL,
+        mapping_json longtext NOT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-    dbDelta( $sql );
+    dbDelta( $sql1 );
+    dbDelta( $sql2 );
 }

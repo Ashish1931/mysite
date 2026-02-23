@@ -42,10 +42,21 @@ class Kylas_CRM_Admin_Menu {
             array($this, 'render_settings_page')
         );
 
+        add_submenu_page(
+            'kylas-crm',
+            'Field Mapping',
+            'Field Mapping',
+            'manage_options',
+            'kylas-crm-mapping',
+            array($this, 'render_mapping_page')
+        );
     }
 
     public function render_settings_page() {
-        // Separate file logic for cleaner code
         require_once KYLAS_CRM_PLUGIN_DIR . 'admin/settings-page.php';
+    }
+
+    public function render_mapping_page() {
+        require_once KYLAS_CRM_PLUGIN_DIR . 'admin/mapping-page.php';
     }
 }
