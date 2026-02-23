@@ -133,27 +133,32 @@ class Kylas_CRM_Form_Handler {
         $notify_lead  = get_option( 'kylas_crm_notify_lead', 'no' );
         $full_name    = trim( $first_name . ' ' . $last_name );
 
+        $headers = array('Content-Type: text/html; charset=UTF-8');
+
         // 1. Notify Admin
         if ( 'yes' === $notify_admin ) {
             $admin_email = get_option( 'admin_email' );
             $subject     = 'New Lead Created in Kylas CRM';
-            $message     = "A new lead has been successfully registered in Kylas CRM.\n\n";
-            $message    .= "Name: $full_name\n";
-            $message    .= "Email: $lead_email\n";
-            $message    .= "Date: " . current_time( 'mysql' ) . "\n";
+            $message     = "<h3>New Lead Form Submission</h3>";
+            $message    .= "<p>A new lead has been successfully registered in Kylas CRM.</p>";
+            $message    .= "<ul>";
+            $message    .= "<li><strong>Name:</strong> $full_name</li>";
+            $message    .= "<li><strong>Email:</strong> $lead_email</li>";
+            $message    .= "<li><strong>Date:</strong> " . current_time( 'mysql' ) . "</li>";
+            $message    .= "</ul>";
             
-            wp_mail( $admin_email, $subject, $message );
+            wp_mail( $admin_email, $subject, $message, $headers );
         }
 
         // 2. Notify Lead
         if ( 'yes' === $notify_lead && ! empty( $lead_email ) ) {
             $subject = 'Registration Successful';
-            $message = "Hello $first_name,\n\n";
-            $message .= "Thank you for reaching out! We have successfully received your information and registered you in our CRM.\n\n";
-            $message .= "Our team will get back to you shortly.\n\n";
-            $message .= "Best regards,\n" . get_bloginfo( 'name' );
+            $message = "<p>Hello <strong>$first_name</strong>,</p>";
+            $message .= "<p>Thank you for reaching out! We have successfully received your information and registered you in our CRM.</p>";
+            $message .= "<p>Our team will get back to you shortly.</p>";
+            $message .= "<p>Best regards,<br>" . get_bloginfo( 'name' ) . "</p>";
 
-            wp_mail( $lead_email, $subject, $message );
+            wp_mail( $lead_email, $subject, $message, $headers );
         }
     }
 

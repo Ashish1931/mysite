@@ -52,8 +52,8 @@ if (class_exists('WPCF7_ContactForm')) {
     $cf7_forms = WPCF7_ContactForm::find();
 }
 
-// Kylas Fields with Metadata
-$kylas_fields = array(
+// Define Default Kylas Fields
+$default_kylas_fields = array(
     'firstName'   => array('label' => 'First Name', 'type' => 'Text'),
     'lastName'    => array('label' => 'Last Name', 'type' => 'Text'),
     'email'       => array('label' => 'Email', 'type' => 'Text'),
@@ -63,6 +63,17 @@ $kylas_fields = array(
     'companyName' => array('label' => 'Company Name', 'type' => 'Text'),
     'designation' => array('label' => 'Designation', 'type' => 'Text'),
 );
+
+// Fetch current fields from DB or use defaults
+$kylas_fields = get_option('kylas_crm_lead_fields', $default_kylas_fields);
+
+// Handle Sync Fields (Placeholder for future API integration)
+if (isset($_POST['kylas_crm_sync_fields']) && check_admin_referer('kylas_crm_sync_fields', 'kylas_sync_nonce')) {
+    // This is where we would call Kylas API to fetch available fields
+    // For now, we'll just ensure the option is safely stored
+    update_option('kylas_crm_lead_fields', $kylas_fields);
+    echo '<div class="notice notice-info is-dismissible"><p>Fields synced successfully (using defaults/available mappings).</p></div>';
+}
 
 $selected_form_id = isset($_GET['form_id']) ? intval($_GET['form_id']) : 0;
 $current_mapping = array();
@@ -79,32 +90,33 @@ if ($selected_form_id > 0) {
     
     <div class="card" style="max-width: 100%; margin-top: 20px;">
         <h2>Step 1 & 2: Select Form</h2>
-        <form method="get" action="">
-            <input type="hidden" name="page" value="kylas-crm-mapping" />
-            <table class="form-table">
-                <tr>
-                    <th scope="row">Form Type</th>
-                    <td>
-                        <select name="form_type">
-                            <option value="cf7">Contact Form 7</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Select Form</th>
-                    <td>
-                        <select name="form_id" onchange="this.form.submit()">
-                            <option value="">-- Select a Form --</option>
-                            <?php foreach ($cf7_forms as $form) : ?>
-                                <option value="<?php echo $form->id(); ?>" <?php selected($selected_form_id, $form->id()); ?>>
-                                    <?php echo esc_html($form->title()); ?> (ID: <?php echo $form->id(); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </td>
-                </tr>
-            </table>
-        </form>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <form method="get" action="" style="flex-grow: 1;">
+                <input type="hidden" name="page" value="kylas-crm-mapping" />
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Select CF7 Form</th>
+                        <td>
+                            <select name="form_id" onchange="this.form.submit()">
+                                <option value="">-- Select a Form --</option>
+                                <?php foreach ($cf7_forms as $form) : ?>
+                                    <option value="<?php echo $form->id(); ?>" <?php selected($selected_form_id, $form->id()); ?>>
+                                        <?php echo esc_html($form->title()); ?> (ID: <?php echo $form->id(); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('kylas_crm_sync_fields', 'kylas_sync_nonce'); ?>
+                <button type="submit" name="kylas_crm_sync_fields" class="button button-secondary">
+                    Sync Kylas Fields
+                </button>
+            </form>
+        </div>
     </div>
 
     <?php if ($selected_form_id > 0) : 

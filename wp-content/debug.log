@@ -21,3 +21,4 @@
 [19-Feb-2026 04:19:20 UTC] CRM Response: {"code":"000004","message":"Invalid JSON","errorDetails":[]}
 [19-Feb-2026 05:49:41 UTC] CRM Status: 400
 [19-Feb-2026 05:49:41 UTC] CRM Response: {"code":"000000","message":"2","fieldErrors":null}
+[23-Feb-2026 11:07:38 UTC] PHP Notice:  connect(): Could not access filesystem. in /var/www/html/mysite/wp-includes/functions.php on line 6131
